@@ -1,6 +1,6 @@
-# SQL Query Generator - Production Ready
+# SQL Query Generator 
 
-## Project Structure (Production-ready)
+## Project Structure 
 
 ```
 sql-query-generator-project/
