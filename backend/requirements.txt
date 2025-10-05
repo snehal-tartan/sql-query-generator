@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+mysql-connector-python
+python-dotenv
+openai
+sqlparse
+matplotlib>=3.7.0
+numpy<2.0
+pandas
+

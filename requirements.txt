@@ -1,0 +1,39 @@
+#AI Framework
+langchain
+llama-index
+crewai
+chromadb
+
+#LLMs & Embeddings
+openai
+transformers
+sentence-transformers
+
+#Backend & API
+fastapi
+uvicorn
+pydantic
+
+#Database Drivers
+sqlalchemy
+#psycog2-binary==2.9.9 #PostgreSQL
+pyodbc #SQL Server
+mysql-connector-python
+snowflake-connector-python
+sqlparse
+
+#Additional Tools
+tqdm
+python-dotenv #environment variable management (used for OpenAI API key)
+loguru #logging
+
+#tesing
+pytest
+
+#UI Framework
+streamlit
+
+#Data Visualization
+numpy<2.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
