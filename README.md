@@ -1,38 +1,4 @@
 # SQL Query Generator 
-
-## Project Structure 
-
-```
-sql-query-generator-project/
-├─ backend/
-│  ├─ app.py                # FastAPI entry point
-│  ├─ database.py           # DB engine & schema helpers
-│  ├─ query_generator.py    # SQL generation & execution (OpenAI + SQLAlchemy)
-│  ├─ graph_generator.py    # Headless graph PNG base64 generator
-│  ├─ routers/
-│  │  ├─ auth.py            # Connect DB, status
-│  │  ├─ query.py           # Generate & execute SQL endpoints
-│  │  └─ graph.py           # Generate graph endpoint
-│  └─ requirements.txt
-├─ frontend/
-│  └─ ui.py                 # Streamlit frontend (legacy/testing)
-├─ react-frontend/
-│  ├─ src/
-│  │  ├─ api/
-│  │  │  ├─ client.ts       # Axios client setup
-│  │  │  └─ services.ts     # API service functions
-│  │  ├─ components/
-│  │  │  ├─ Sidebar/        # Left sidebar navigation
-│  │  │  ├─ Header/         # Top header with user info
-│  │  │  └─ QueryGenerator/ # Main query generation component
-│  │  ├─ App.tsx            # Main app layout
-│  │  └─ main.tsx           # App entry point
-│  ├─ package.json
-│  └─ .env                  # VITE_API_URL=http://127.0.0.1:8000
-├─ .env                     # OPEN_AI_API_KEY (never commit)
-└─ README.md
-```
-
 ## Run Backend (FastAPI)
 ```bash
 cd backend
