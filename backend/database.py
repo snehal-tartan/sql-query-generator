@@ -11,6 +11,23 @@ MYSQL_DATABASE = None
 MYSQL_PORT = None
 DATABASE_URL = None
 
+def load_from_env():
+    """Load database connection from environment variables"""
+    global engine, DATABASE_URL
+    
+    # Try to get MYSQL_URL from environment
+    mysql_url = os.getenv("MYSQL_URL")
+    if mysql_url:
+        # Convert mysql:// to mysql+mysqlconnector:// for SQLAlchemy
+        if mysql_url.startswith("mysql://"):
+            mysql_url = mysql_url.replace("mysql://", "mysql+mysqlconnector://")
+        
+        DATABASE_URL = mysql_url
+        engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+        return True
+    
+    return False
+
 def set_database_credentials(host, user, password, database, port=3306):
     """Set database credentials and create engine"""
     global engine, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_PORT, DATABASE_URL
@@ -35,6 +52,9 @@ def get_engine():
 
 def is_connected():
     """Check if database is connected"""
+    # Try to load from environment variables if not already connected
+    if engine is None:
+        load_from_env()
     return engine is not None
 
 def test_connection():
