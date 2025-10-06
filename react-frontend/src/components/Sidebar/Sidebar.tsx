@@ -2,7 +2,6 @@ import { Box, Typography } from '@mui/material';
 import { 
   TbWand, 
   TbSparkles, 
-  TbTransform,
   TbFileText,
   TbInfinity,
   TbChecklist,

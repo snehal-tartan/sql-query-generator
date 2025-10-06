@@ -7,7 +7,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TextField,
   Alert,
   CircularProgress,
 } from '@mui/material';
@@ -22,7 +21,6 @@ interface GraphGeneratorProps {
 
 const GraphGenerator = ({ sqlQuery, hasResults }: GraphGeneratorProps) => {
   const [chartType, setChartType] = useState('bar');
-  const [chartName, setChartName] = useState('');
   const [graphImage, setGraphImage] = useState('');
   const [insights, setInsights] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,8 +40,7 @@ const GraphGenerator = ({ sqlQuery, hasResults }: GraphGeneratorProps) => {
     try {
       const response = await queryService.generateGraph(
         sqlQuery,
-        chartType,
-        chartName || undefined
+        chartType
       );
 
       if (response.error) {

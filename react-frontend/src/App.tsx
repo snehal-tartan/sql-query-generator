@@ -16,7 +16,8 @@ function App() {
 
   const checkConnectionStatus = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/database_status');
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/database_status`);
       const data = await response.json();
       console.log('Database status:', data);
       if (data.connected) {
@@ -33,9 +34,6 @@ function App() {
     }
   };
 
-  const handleConnect = () => {
-    setIsConnected(true);
-  };
 
   return (
     <Box sx={{ display: 'flex', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
