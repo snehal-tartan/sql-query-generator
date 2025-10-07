@@ -1,38 +1,9 @@
-import { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import Sidebar from './components/Sidebar/Sidebar';
 import Header from './components/Header/Header';
 import QueryGenerator from './components/QueryGenerator/QueryGenerator';
-import DatabaseConnectionModal from './components/DatabaseConnectionModal/DatabaseConnectionModal';
 
 function App() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [showConnectionModal, setShowConnectionModal] = useState(true); // Show by default
-
-  // Check connection status on mount
-  useEffect(() => {
-    checkConnectionStatus();
-  }, []);
-
-  const checkConnectionStatus = async () => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/database_status`);
-      const data = await response.json();
-      console.log('Database status:', data);
-      if (data.connected) {
-        setIsConnected(true);
-        setShowConnectionModal(false);
-      } else {
-        setIsConnected(false);
-        setShowConnectionModal(true);
-      }
-    } catch (error) {
-      console.error('Failed to check connection status:', error);
-      setIsConnected(false);
-      setShowConnectionModal(true);
-    }
-  };
 
 
   return (
@@ -54,37 +25,9 @@ function App() {
             padding: 0,
           }}
         >
-          {isConnected ? (
-            <QueryGenerator />
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: 'calc(100vh - 60px)',
-              }}
-            >
-              {/* Placeholder while checking connection */}
-            </Box>
-          )}
+          <QueryGenerator />
         </Box>
       </Box>
-
-      {/* Database Connection Modal */}
-      <DatabaseConnectionModal
-        open={showConnectionModal}
-        onClose={() => {
-          // Don't allow closing if not connected
-          if (isConnected) {
-            setShowConnectionModal(false);
-          }
-        }}
-        onConnect={() => {
-          setIsConnected(true);
-          setShowConnectionModal(false);
-        }}
-      />
     </Box>
   );
 }
