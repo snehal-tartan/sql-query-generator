@@ -19,6 +19,17 @@ def load_from_env():
     """Load database connection from environment variables"""
     global engine, DATABASE_URL, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_PORT
     
+    # Try to get MYSQL_PUBLIC_URL from environment (for Railway - highest priority)
+    mysql_public_url = os.getenv("MYSQL_PUBLIC_URL")
+    if mysql_public_url:
+        # Convert mysql:// to mysql+mysqlconnector:// for SQLAlchemy
+        if mysql_public_url.startswith("mysql://"):
+            mysql_public_url = mysql_public_url.replace("mysql://", "mysql+mysqlconnector://")
+        
+        DATABASE_URL = mysql_public_url
+        engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+        return True
+    
     # Try to get MYSQL_URL from environment (for production)
     mysql_url = os.getenv("MYSQL_URL")
     if mysql_url:
