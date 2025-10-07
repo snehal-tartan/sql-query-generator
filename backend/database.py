@@ -1,6 +1,10 @@
 import os
 from sqlalchemy import create_engine, text
 from urllib.parse import quote_plus
+from dotenv import load_dotenv, find_dotenv
+
+# Load environment variables
+load_dotenv(find_dotenv())
 
 # Global variables for database connection
 engine = None
@@ -13,9 +17,9 @@ DATABASE_URL = None
 
 def load_from_env():
     """Load database connection from environment variables"""
-    global engine, DATABASE_URL
+    global engine, DATABASE_URL, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_PORT
     
-    # Try to get MYSQL_URL from environment
+    # Try to get MYSQL_URL from environment (for production)
     mysql_url = os.getenv("MYSQL_URL")
     if mysql_url:
         # Convert mysql:// to mysql+mysqlconnector:// for SQLAlchemy
@@ -23,6 +27,24 @@ def load_from_env():
             mysql_url = mysql_url.replace("mysql://", "mysql+mysqlconnector://")
         
         DATABASE_URL = mysql_url
+        engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+        return True
+    
+    # Try to get individual environment variables (for local development)
+    env_host = os.getenv("MYSQL_HOST")
+    env_user = os.getenv("MYSQL_USER")
+    env_password = os.getenv("MYSQL_PASSWORD")
+    env_database = os.getenv("MYSQL_DATABASE")
+    env_port = os.getenv("MYSQL_PORT", "3306")
+    
+    if all([env_host, env_user, env_password, env_database]):
+        MYSQL_HOST = env_host
+        MYSQL_USER = env_user
+        MYSQL_PASSWORD = env_password
+        MYSQL_DATABASE = env_database
+        MYSQL_PORT = int(env_port)
+        
+        DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{quote_plus(MYSQL_PASSWORD)}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
         engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
         return True
     
