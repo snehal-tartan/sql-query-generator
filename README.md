@@ -56,17 +56,6 @@ VITE_API_URL=http://127.0.0.1:8000
 - `client.ts`: Axios configuration
 - `services.ts`: Type-safe API functions
 
-## Features
-
-✅ Clean, production-ready UI matching design specs  
-✅ Component-based React architecture  
-✅ TypeScript for type safety  
-✅ Material-UI for consistent design  
-✅ React Query for data fetching  
-✅ FastAPI backend with CORS  
-✅ OpenAI-powered SQL generation  
-✅ MySQL database integration  
-
 ## Next Steps
 
 1. Add sidebar navigation items
