@@ -12,6 +12,9 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 openai.api_key = os.getenv("OPEN_AI_API_KEY")
 
+# Load OpenAI model from environment (default to gpt-4 for graph generation)
+OPENAI_MODEL = os.getenv("OPEN_AI_MODEL")
+
 
 def convert_dataframe_to_csv(df: pd.DataFrame) -> str:
     return df.to_csv(index=False)
@@ -62,13 +65,13 @@ def generate_data_extraction_script(csv_data: str, chart_type: str) -> str | Non
 
     try:
         response = openai.chat.completions.create(
-            model="gpt-4",
+            model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": "You are a data processing expert. Generate pandas code to extract data from CSV."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.5,
-            max_tokens=800
+            # temperature=0.1,
+            # max_tokens=1000
         )
         generated_code = response.choices[0].message.content.strip()
         if "```python" in generated_code:
@@ -76,49 +79,58 @@ def generate_data_extraction_script(csv_data: str, chart_type: str) -> str | Non
         elif "```" in generated_code:
             generated_code = generated_code.split("```")[1].split("```")[0]
         return generated_code
-    except Exception:
+    except Exception as e:
+        print(f"[ERROR] generate_data_extraction_script failed: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
 def generate_graph_creation_script(extracted_data: dict, chart_type: str) -> str | None:
     """Generate script to create the actual graph"""
     prompt = f"""
-Create a {chart_type} chart using matplotlib with the following data structure:
+You are a Python data visualization expert. 
+Generate accurate and minimal Matplotlib code to visualize the given dataset.
 
-AVAILABLE VARIABLES:
-- df: The main DataFrame containing the data
-- extracted_data: Dictionary with keys: {list(extracted_data.keys()) if extracted_data else 'None'}
+TASK:
+Create a {chart_type} chart using Matplotlib based on the data below.
 
-DATA STRUCTURE:
+AVAILABLE CONTEXT:
+- df: Main DataFrame containing the data.
+- extracted_data: A Python dictionary with structure:
 {extracted_data}
 
-CRITICAL REQUIREMENTS:
-1. Access the main DataFrame using: df = extracted_data['data']
-2. Create figure: fig, ax = plt.subplots(figsize=(16, 10))
-3. Use the COMPLETE dataset - all rows and appropriate columns
-4. Variable names available: df, plt, pd, np, extracted_data
-5. The 'fig' variable MUST be created and remain accessible
-6. Add proper labels, title, and styling
-7. End with: plt.tight_layout()
-8. DO NOT use plt.show() or return statements
-    
-    Chart Type Guidelines:
-    - BAR: Use ax.bar() with categorical data on x-axis, numeric on y-axis
-    - LINE: Use ax.plot() with markers for trends over categories/time
-    - PIE: Use ax.pie() for proportions
-    - SCATTER: Use ax.scatter() for correlations between numeric columns
-    
-    Return ONLY the Python code that creates the chart.
+IMPORTANT VARIABLES:
+- Access the main dataset using: df = extracted_data['data']
+- The variable 'fig' must be defined as: fig, ax = plt.subplots(figsize=(16, 10))
+
+CRITICAL INSTRUCTIONS:
+1. Use **only** the columns available in df. Do not infer or invent new columns.
+2. Use **the full dataset** (all rows and columns relevant to the chart).
+3. Follow chart-specific logic strictly:
+   - BAR → ax.bar(x=..., height=...)
+   - LINE → ax.plot(x=..., y=..., marker='o', linewidth=2)
+   - PIE → ax.pie(df[column], labels=df[label_column], autopct='%1.1f%%', startangle=90)
+   - SCATTER → ax.scatter(x=..., y=..., s=80, alpha=0.7)
+4. Automatically infer x/y columns only if **explicitly clear** from the data structure.
+   If not clear, choose the **first categorical** column for X and **first numeric** column for Y.
+5. Add:
+   - Title: descriptive and clean
+   - Axis labels (X, Y) relevant to the data
+   - Gridlines and appropriate styling
+6. Always use:
+   ```python
+   plt.tight_layout()
     """
     try:
         response = openai.chat.completions.create(
-            model="gpt-4",
+            model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": "You are a graph generation expert. Generate matplotlib code to create graphs."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.1,
-            max_tokens=1500
+            # temperature=0.1,
+            # max_tokens=1500
         )
         generated_code = response.choices[0].message.content.strip()
         if "```python" in generated_code:
@@ -126,7 +138,10 @@ CRITICAL REQUIREMENTS:
         elif "```" in generated_code:
             generated_code = generated_code.split("```")[1].split("```")[0]
         return generated_code
-    except Exception:
+    except Exception as e:
+        print(f"[ERROR] generate_graph_creation_script failed: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 

@@ -6,17 +6,20 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 openai.api_key = os.getenv("OPEN_AI_API_KEY")
 
+# Load OpenAI model from environment (default to gpt-4o-mini for insights - faster and cheaper)
+OPENAI_MODEL = os.getenv("OPEN_AI_MODEL")
+
 
 def generate_key_insights(df: pd.DataFrame, chart_type: str = None) -> str | None:
     """
-    Generate concise key insights from the data
+    Generate key insights from the data
     
     Args:
         df: pandas DataFrame containing the query results
         chart_type: Optional chart type for context (bar, line, pie, scatter)
     
     Returns:
-        String containing 3-4 bullet-pointed insights, or None if generation fails
+        String containing 5-6 bullet-pointed insights, or None if generation fails
     """
     try:
         if df.empty:
@@ -52,7 +55,7 @@ Data Preview (first 3 rows):
 
 {f"Summary Statistics:{summary_stats}" if summary_stats else ""}
 
-Provide exactly 3-4 short insights (1-2 sentences each). Focus on:
+Provide exactly 5-6 insights (2-3 sentences each). Focus on:
 1. Key trends or patterns
 2. Notable values (highest, lowest, or interesting outliers)
 3. Business implications or actionable takeaways
@@ -62,7 +65,7 @@ Keep each insight concise and specific to this data.
 """
         
         response = openai.chat.completions.create(
-            model="gpt-4o-mini",
+            model=OPENAI_MODEL,
             messages=[
                 {
                     "role": "system",
@@ -70,8 +73,8 @@ Keep each insight concise and specific to this data.
                 },
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
-            max_tokens=300
+            # temperature=0.3,
+            # max_tokens=300
         )
         
         insights = response.choices[0].message.content.strip()

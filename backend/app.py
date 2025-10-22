@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-#from .routers.auth import router as auth_router
 from backend.routers.auth import router as auth_router
 from .routers.query import router as query_router
 from .routers.graph import router as graph_router

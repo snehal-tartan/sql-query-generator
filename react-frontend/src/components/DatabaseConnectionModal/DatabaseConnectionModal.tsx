@@ -30,7 +30,7 @@ const DatabaseConnectionModal = ({
     user: '',
     password: '',
     database: '',
-    port: 3306,
+    port: 41854,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -210,7 +210,7 @@ const DatabaseConnectionModal = ({
             label="Port"
             type="number"
             value={formData.port}
-            onChange={(e) => handleChange('port', parseInt(e.target.value) || 3306)}
+            onChange={(e) => handleChange('port', parseInt(e.target.value) || 41854)}
             onKeyPress={handleKeyPress}
             fullWidth
             size="small"

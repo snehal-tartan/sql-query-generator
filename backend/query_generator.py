@@ -2,7 +2,7 @@ import os
 import openai
 import sqlparse
 import re
-from .database import get_engine, get_schema
+from .database import get_engine, get_schema, format_schema_for_llm
 from dotenv import load_dotenv, find_dotenv
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,33 +10,17 @@ from sqlalchemy.exc import SQLAlchemyError
 load_dotenv(find_dotenv())
 openai.api_key = os.getenv("OPEN_AI_API_KEY")
 
-
-def clean_sql_output(response_text):
-    """Removes markdown formatting from the SQL output."""
-    clean_query = re.sub(r'```sql\n(.*?)```', r'\1', response_text, flags=re.DOTALL)
-    clean_query = re.sub(r'```\n(.*?)```', r'\1', clean_query, flags=re.DOTALL)
-    sql_match = re.search(r"\bSELECT[\s\S]*?;", clean_query, re.IGNORECASE)
-    return sql_match.group(0) if sql_match else clean_query.strip()
-
-
-def validate_sql_query(sql_query):
-    """Validates the SQL query syntax before execution."""
-    try:
-        parsed = sqlparse.parse(sql_query)
-        if not parsed:
-            return False, "Invalid SQL syntax."
-        return True, None
-    except Exception as e:
-        return False, str(e)
-    
+# Load OpenAI model from environment (default to gpt-4o if not specified)
+OPENAI_MODEL = os.getenv("OPEN_AI_MODEL")
 
 def generate_sql_query(n1_query: str):
     """Converts a natural language query to an SQL query"""
     schema = get_schema()
     if not schema:
         print("Warning: Empty schema retrieved from database")
-    schema_text = "\n".join([f"{table}: {', '.join(columns)}" for table, columns in schema.items()])
-
+    
+    # Use the comprehensive schema formatter for LLM
+    schema_text = format_schema_for_llm(schema)
     prompt = f"""
     Given the following MySQL DDL, read and understand the schema carefully before generating the SQL query:
 
@@ -44,8 +28,6 @@ Generate a single SQL query that strictly adheres to these requirements:
 
 1. Syntax & Style:
 - Use standard MySQL 8.0+ syntax
-- Format with proper indentation and line breaks
-- Include explicit table aliases (e.g., `customers c`)
 - End with a semicolon
 
 2. JOIN Requirements:
@@ -67,7 +49,7 @@ Generate a single SQL query that strictly adheres to these requirements:
 If the request is unclear, invalid, or unrelated to SQL query generation, respond only with:
 ERROR: Please provide the specific request or details about the SQL query you need.
 
-Return the SQL query only, with no additional explanations or comments.
+Return the SQL query only, with no additional explanations or comments or any special characters.
 
     Database Schema:
     {schema_text}
@@ -81,49 +63,48 @@ Return the SQL query only, with no additional explanations or comments.
         return openai.chat.completions.create(
             model=model_name,
             messages=[
-                {"role": "system", "content": "You are a SQL optimization expert."},
+                {"role": "system", "content": "You are a SQL query generator expert."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
+            # temperature=0,
         )
 
     try:
-        try_order = ["gpt-4o", "gpt-4", "gpt-4o-mini", "gpt-3.5-turbo"]
+        # Use model from environment variable
+        try_order = [OPENAI_MODEL]
         last_err = None
+        
         for model_name in try_order:
             try:
                 response = _call_model(model_name)
                 raw_sql_query = response.choices[0].message.content.strip()
                 print(f"[DEBUG] Model {model_name} returned: {raw_sql_query[:200]}")
-                clean_query = clean_sql_output(raw_sql_query)
+                # clean_query = clean_sql_output(raw_sql_query)
+                clean_query = raw_sql_query
                 print(f"[DEBUG] Cleaned SQL: {clean_query}")
+                
+                # Validate the generated SQL before returning
                 if clean_query:
-                    return clean_query
+                    is_valid, error_msg = validate_sql_query(clean_query)
+                    if is_valid:
+                        print(f"[DEBUG] SQL validation passed")
+                        return clean_query
+                    else:
+                        print(f"[DEBUG] SQL validation failed: {error_msg}")
+                        print(f"[DEBUG] Generated query has syntax errors, please try again or edit manually")
+                        # Still return the query so user can edit it
+                        return clean_query
             except Exception as inner_e:
+                print(f"[DEBUG] Model {model_name} failed: {inner_e}")
                 last_err = inner_e
                 continue
+        
         if last_err:
             print(f"Error generating SQL query (all models failed): {last_err}")
         return None
     except Exception as e:
         print(f"Error generating SQL query: {e}")
         return None
-    
-
-def suggest_index(sql_query: str):
-    """Suggests indexes for the executed SQL query"""
-    engine = get_engine()
-    if engine is None:
-        return "Database not connected. Cannot generate execution plan."
-
-    try:
-        with engine.connect() as connection:
-            explain_query = f"EXPLAIN {sql_query}"
-            result = connection.execute(text(explain_query))
-            execution_plan = result.fetchall()
-        return "consider adding an index on Frequency used WHERE condition"
-    except Exception as e:
-        return f"Could not generate execution plan: {e}"
 
 
 def execute_query(sql_query: str):
@@ -149,10 +130,32 @@ def execute_query(sql_query: str):
                 print("[DEBUG] fetchall() not supported, returning empty list")
                 fetched_results = []
 
-        index_suggestion = suggest_index(sql_query)
-        return {"result": fetched_results, "optimization_tips": index_suggestion}
+        return {"result": fetched_results}
     except SQLAlchemyError as e:
         print(f"[ERROR] SQLAlchemyError: {e}")
         return None
 
 
+def validate_sql_query(sql_query):
+    """Validates the SQL query syntax before execution."""
+    try:
+        # Basic parsing validation
+        parsed = sqlparse.parse(sql_query)
+        if not parsed:
+            return False, "Invalid SQL syntax."
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+def clean_sql_output(response_text):
+    """Removes markdown formatting from the SQL output."""
+    clean_query = re.sub(r'```sql\n(.*?)```', r'\1', response_text, flags=re.DOTALL)
+    clean_query = re.sub(r'```\n(.*?)```', r'\1', clean_query, flags=re.DOTALL)
+    sql_match = re.search(r"\bSELECT[\s\S]*?;", clean_query, re.IGNORECASE)
+    return sql_match.group(0) if sql_match else clean_query.strip()
+
+# Temporary debug code - remove after testing
+if __name__ == "__main__":
+    import json
+    schema = get_schema()
+    print(json.dumps(schema, indent=2, default=str))

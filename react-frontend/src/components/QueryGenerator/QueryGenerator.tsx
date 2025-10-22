@@ -196,28 +196,35 @@ const QueryGenerator = () => {
             )}
           </Box>
 
-          <Box
+          <TextField
+            multiline
+            fullWidth
+            rows={6}
+            value={generatedQuery}
+            onChange={(e) => setGeneratedQuery(e.target.value)}
+            placeholder="Generated query appears here... You can edit it before execution."
             sx={{
-              backgroundColor: '#f8f9fa',
-              border: '1px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: 2,
-              overflowY: 'auto',
-              fontFamily: 'monospace',
-              fontSize: '13px',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
               marginBottom: 3,
-              maxHeight: '150px',
-              minHeight: '100px',
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: '#f8f9fa',
+                fontFamily: 'monospace',
+                fontSize: '13px',
+                '& fieldset': {
+                  borderColor: '#e0e0e0',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#2F78EE',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#2F78EE',
+                },
+              },
+              '& .MuiInputBase-input': {
+                fontFamily: 'monospace',
+                fontSize: '13px',
+              },
             }}
-          >
-            {generatedQuery || (
-              <Typography sx={{ color: '#999', fontSize: '14px', fontFamily: 'system-ui' }}>
-                Generated query appears here
-              </Typography>
-            )}
-          </Box>
+          />
 
           {/* Action Buttons - Side by Side */}
           <Box
