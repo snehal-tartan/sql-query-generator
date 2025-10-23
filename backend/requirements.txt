@@ -10,3 +10,7 @@ matplotlib>=3.7.0
 numpy<2.0
 pandas
 
+# LangChain dependencies
+langchain
+langchain-openai
+langchain-community
