@@ -27,10 +27,10 @@ const DatabaseConnectionModal = ({
 }: DatabaseConnectionModalProps) => {
   const [formData, setFormData] = useState({
     host: 'localhost',
-    user: '',
+    user: 'root',
     password: '',
-    database: '',
-    port: 41854,
+    database: 'DummyData',
+    port: 3306,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
