@@ -139,8 +139,7 @@ def get_engine():
 
 def is_connected():
     """Check if database is connected"""
-    if engine is None:
-        load_from_env()
+    # Only check if connection exists, don't auto-connect
     return engine is not None
 
 def test_connection():

@@ -29,11 +29,11 @@ def get_langchain_db():
     return SQLDatabase(engine)
 
 def get_llm():
-    """Initialize OpenAI LLM - no temperature for GPT-5"""
+    """Initialize OpenAI LLM"""
     return ChatOpenAI(
         model=OPENAI_MODEL,
         api_key=OPENAI_API_KEY,
-        temperature=1
+        temperature=1 # Explicitly set to default value 1
     )
 
 def generate_sql_query(n1_query: str):
@@ -57,7 +57,7 @@ Given the following MySQL DDL, read and understand the schema carefully before g
 Generate a single SQL query that strictly adheres to these requirements:
 
 1. Syntax & Style:
-- Use standard MySQL 8.0+ syntax
+- Use standard MySQL 8.0 or higher syntax
 - End with a semicolon
 
 2. JOIN Requirements:
@@ -99,8 +99,8 @@ Please provide only the SQL query without any explanations or additional text.
         
         # Generate SQL query (only LLM call, no schema fetch!)
         response = chain.invoke({
-            "schema": schema_text,
-            "question": n1_query
+            "schema": schema_text, # cached schema ko m developer prompt m input daal rha hu
+            "question": n1_query # developer prompt m main user ka question input daal rha hu
         })
         
         sql_query = response["text"].strip()

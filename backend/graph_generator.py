@@ -198,4 +198,3 @@ def generate_graph_png_base64(df: pd.DataFrame, chart_type: str, chart_name: str
     except Exception:
         return None
 
-
